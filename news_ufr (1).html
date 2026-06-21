@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0B3D6B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NEWS-UFR">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" id="ati">
+<link rel="icon" id="favi">
+<link rel="manifest" id="manifest">
+<title>NEWS & UFR — หน่วยไตเทียม</title>
+<style>
+  /* ============================================================
+     CONFIG ที่ปรับได้: เพดาน UFR (ซีซี/กก./ชม.) ของแต่ละกลุ่มเสี่ยง
+     แก้ไขที่ตัวแปร UFR_CEILING ในส่วน <script>
+     เวลาฟอกตรึงที่ 4 ชั่วโมงทุกครั้ง (DIALYSIS_HOURS)
+     ============================================================ */
+  :root{
+    --navy:#0B3D6B; --blue:#1E78C8; --blue-soft:#E7F1FA;
+    --surface:#F2F7FB; --card:#FFFFFF; --line:#DCE7F1;
+    --ink:#1C2B3A; --muted:#5B6B7B;
+    --safe:#1B9E5A; --safe-bg:#E6F5EC;
+    --warn:#E29A2E; --warn-bg:#FCF2E0;
+    --danger:#D34141; --danger-bg:#FBE7E7;
+    --shadow:0 2px 10px rgba(11,61,107,.07);
+    --radius:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Sarabun","TH Sarabun New","Noto Sans Thai",Tahoma,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--surface);color:var(--ink);font-size:16px;line-height:1.5}
+  body{max-width:560px;margin:0 auto;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+
+  header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:calc(16px + env(safe-area-inset-top,0px)) 18px 16px;border-radius:0 0 22px 22px;box-shadow:var(--shadow)}
+  header .brand{display:flex;align-items:center;gap:13px}
+  header .logo{width:58px;height:58px;flex:0 0 auto;border-radius:50%;background:#fff;padding:3px;object-fit:contain;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+  header .eyebrow{font-size:12px;letter-spacing:.04em;opacity:.9;margin:0}
+  header h1{font-size:18px;margin:3px 0 2px;font-weight:700;letter-spacing:-.01em}
+  header p.sub{font-size:12px;margin:0;opacity:.85}
+
+  .wrap{padding:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+  .card .step{width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .card .hint{font-size:12px;color:var(--muted);margin:0 0 12px 30px}
+
+  .vital{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+  .vital:first-of-type{border-top:none}
+  .vital .lbl{flex:1 1 auto;min-width:0}
+  .vital .lbl .name{font-size:14px;font-weight:600}
+  .vital .lbl .unit{font-size:11.5px;color:var(--muted)}
+  .vital input[type=number]{width:84px;flex:0 0 auto;text-align:center;font-size:17px;font-weight:600;padding:9px 6px;border:1.5px solid var(--line);border-radius:11px;background:#fff;color:var(--ink)}
+  .vital input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+  .subscore{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--muted)}
+  .subscore.s0{background:var(--safe-bg);color:var(--safe)}
+  .subscore.s1{background:var(--warn-bg);color:var(--warn)}
+  .subscore.s2{background:var(--warn-bg);color:#C77A12}
+  .subscore.s3{background:var(--danger-bg);color:var(--danger)}
+
+  .seg{display:flex;gap:6px;flex:0 0 auto}
+  .seg button{border:1.5px solid var(--line);background:#fff;color:var(--muted);padding:8px 11px;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer}
+  .seg button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  /* AVPU list */
+  .avpu-block{padding:11px 0 2px;border-top:1px solid var(--line)}
+  .avpu-block .name{font-size:14px;font-weight:600;margin-bottom:8px}
+  .avpu-list{display:flex;flex-direction:column;gap:7px}
+  .avpu-opt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:9px 11px;cursor:pointer}
+  .avpu-opt .ab{width:30px;height:30px;flex:0 0 auto;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:var(--muted)}
+  .avpu-opt .at{font-size:13px;color:var(--ink)}
+  .avpu-opt .at b{font-weight:700}
+  .avpu-opt .at span{color:var(--muted)}
+  .avpu-opt.on{border-color:var(--blue);background:var(--blue-soft)}
+  .avpu-opt.on .ab{background:var(--blue);color:#fff}
+  .avpu-opt.on.abn{border-color:var(--danger);background:var(--danger-bg)}
+  .avpu-opt.on.abn .ab{background:var(--danger);color:#fff}
+
+  /* monitor */
+  .monitor{border-radius:var(--radius);padding:18px;text-align:center;color:#fff;background:var(--navy);transition:background .25s ease}
+  .monitor.low{background:linear-gradient(135deg,#178A4E,#1FB063)}
+  .monitor.medium{background:linear-gradient(135deg,#C77A12,#E8A33D)}
+  .monitor.high{background:linear-gradient(135deg,#B02C2C,#E04B4B)}
+  .monitor .mlabel{font-size:12px;letter-spacing:.08em;opacity:.9;margin:0}
+  .monitor .score{font-size:60px;font-weight:800;line-height:1;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+  .monitor .band{font-size:17px;font-weight:700;margin:2px 0 0}
+  .monitor .redflag{display:inline-block;margin-top:9px;font-size:12px;background:rgba(255,255,255,.2);padding:4px 10px;border-radius:20px}
+
+  /* UFR */
+  .field{margin-bottom:11px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+  .field .row{display:flex;align-items:center;gap:8px}
+  .field input{flex:1 1 auto;width:100%;font-size:16px;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;background:#fff;color:var(--ink)}
+  .field input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+  .field .suffix{font-size:13px;color:var(--muted);flex:0 0 auto}
+  .grid2{display:flex;gap:10px}
+  .grid2>.field{flex:1}
+
+  .readonly{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px dashed var(--line);border-radius:11px;padding:11px 12px;margin-bottom:11px}
+  .readonly .k{font-size:13px;font-weight:600;color:var(--muted)}
+  .readonly .v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+  .fixednote{font-size:12px;color:var(--muted);margin:-2px 0 12px}
+
+  .ufresult{border-radius:12px;padding:16px;margin-top:4px;border:1px solid var(--line);background:var(--blue-soft)}
+  .ufr-cap{text-align:center}
+  .ufr-cap .cl{font-size:12px;color:var(--navy);font-weight:700;letter-spacing:.04em;margin:0}
+  .ufr-cap .num{font-size:42px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.1;margin:2px 0}
+  .ufr-cap .u{font-size:13px;color:var(--muted)}
+  .ufr-formula{font-size:11.5px;color:var(--muted);text-align:center;margin:4px 0 0}
+  .verdict{text-align:center;font-weight:700;font-size:14px;padding:10px;border-radius:10px;margin-top:12px}
+  .verdict.safe{background:var(--safe-bg);color:var(--safe)}
+  .verdict.warn{background:var(--warn-bg);color:#B9760F}
+  .verdict.danger{background:var(--danger-bg);color:var(--danger)}
+  .placeholder{color:var(--muted);font-size:13px;text-align:center;padding:8px 0}
+
+  .ceilings{display:flex;gap:6px;margin-top:12px}
+  .ceil{flex:1;text-align:center;border-radius:10px;padding:8px 4px;border:1px solid var(--line);font-size:11px}
+  .ceil.active{border-width:2px}
+  .ceil .cname{font-weight:700}
+  .ceil .cval{font-size:15px;font-weight:800;margin-top:2px}
+  .ceil.c-low{color:var(--safe)} .ceil.c-low.active{border-color:var(--safe);background:var(--safe-bg)}
+  .ceil.c-med{color:#B9760F} .ceil.c-med.active{border-color:var(--warn);background:var(--warn-bg)}
+  .ceil.c-high{color:var(--danger)} .ceil.c-high.active{border-color:var(--danger);background:var(--danger-bg)}
+
+  /* care guidance */
+  .care{border:1px solid var(--line);border-left-width:4px;border-radius:12px;padding:12px 14px;margin-bottom:10px;opacity:.55;transition:opacity .2s}
+  .care:last-child{margin-bottom:0}
+  .care.on{opacity:1}
+  .care.g-low{border-left-color:var(--safe)}
+  .care.g-medium{border-left-color:var(--warn)}
+  .care.g-high{border-left-color:var(--danger)}
+  .care .ct{font-size:13.5px;font-weight:700;margin:0 0 5px}
+  .care.g-low .ct{color:var(--safe)} .care.g-medium .ct{color:#B9760F} .care.g-high .ct{color:var(--danger)}
+  .care .cb{font-size:12.5px;color:var(--ink);margin:0;line-height:1.55}
+  .care .badge{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;border-radius:20px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+  .care.g-low .badge{background:var(--safe)} .care.g-medium .badge{background:var(--warn)} .care.g-high .badge{background:var(--danger)}
+
+  .reset{width:100%;padding:13px;border:none;border-radius:12px;background:var(--blue-soft);color:var(--navy);font-size:14px;font-weight:700;cursor:pointer;margin-top:2px}
+  footer{padding:6px 20px 0;font-size:11px;color:var(--muted);line-height:1.45}
+  footer b{color:var(--ink)}
+
+  .share{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .share:active{opacity:.9}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13px;font-weight:600;padding:11px 18px;border-radius:24px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90%;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .modal{position:fixed;inset:0;background:rgba(11,30,50,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:70}
+  .modal.show{display:flex}
+  .modal .box{background:#fff;border-radius:16px;width:100%;max-width:480px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  .modal h3{margin:0 0 4px;font-size:15px}
+  .modal p{margin:0 0 10px;font-size:12px;color:var(--muted)}
+  .modal textarea{width:100%;height:230px;border:1.5px solid var(--line);border-radius:11px;padding:11px;font-size:12.5px;line-height:1.5;color:var(--ink);font-family:inherit;resize:none}
+  .modal .mbtns{display:flex;gap:8px;margin-top:10px}
+  .modal .mbtns button{flex:1;padding:11px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+  .modal .mcopy{background:var(--blue);color:#fff}
+  .modal .mclose{background:var(--blue-soft);color:var(--navy)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img class="logo" src="data:image/png;base64,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" alt="โรงพยาบาลสุโขทัย">
+    <div>
+      <p class="eyebrow">โรงพยาบาลสุโขทัย • หน่วยไตเทียม</p>
+      <h1>คำนวณ NEWS &amp; ประเมิน UFR</h1>
+      <p class="sub">คัดแยกกลุ่มเสี่ยงต่อภาวะความดันต่ำขณะฟอกเลือด (IDH)</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- STEP 1: NEWS -->
+  <section class="card">
+    <h2><span class="step">1</span> บันทึกสัญญาณชีพ</h2>
+    <p class="hint">กรอกค่าที่วัดได้ ระบบให้คะแนนย่อยอัตโนมัติ</p>
+
+    <div class="vital">
+      <div class="lbl"><div class="name">อัตราการหายใจ</div><div class="unit">ครั้ง/นาที</div></div>
+      <input type="number" id="rr" inputmode="numeric" placeholder="—"><div class="subscore" id="s-rr">–</div>
+    </div>
+    <div class="vital">
+      <div class="lbl"><div class="name">ค่าออกซิเจนปลายนิ้ว (SpO₂)</div><div class="unit">%</div></div>
+      <input type="number" id="spo2" inputmode="numeric" placeholder="—"><div class="subscore" id="s-spo2">–</div>
+    </div>
+    <div class="vital">
+      <div class="lbl"><div class="name">การได้รับออกซิเจน</div><div class="unit">มี = +2 คะแนน</div></div>
+      <div class="seg" id="o2"><button data-v="0" class="on">ไม่ได้</button><button data-v="1">ได้รับ</button></div>
+    </div>
+    <div class="vital">
+      <div class="lbl"><div class="name">อุณหภูมิร่างกาย</div><div class="unit">°C</div></div>
+      <input type="number" id="temp" inputmode="decimal" step="0.1" placeholder="—"><div class="subscore" id="s-temp">–</div>
+    </div>
+    <div class="vital">
+      <div class="lbl"><div class="name">ความดันโลหิตซิสโตลิก</div><div class="unit">มม.ปรอท</div></div>
+      <input type="number" id="sbp" inputmode="numeric" placeholder="—"><div class="subscore" id="s-sbp">–</div>
+    </div>
+    <div class="vital">
+      <div class="lbl"><div class="name">อัตราการเต้นของหัวใจ</div><div class="unit">ครั้ง/นาที</div></div>
+      <input type="number" id="hr" inputmode="numeric" placeholder="—"><div class="subscore" id="s-hr">–</div>
+    </div>
+
+    <div class="avpu-block">
+      <div class="name">ระดับความรู้สึกตัว (AVPU)</div>
+      <div class="avpu-list" id="avpu">
+        <button data-v="A" class="avpu-opt on"><span class="ab">A</span><span class="at"><b>Alert</b> <span>รู้สึกตัวดี</span></span></button>
+        <button data-v="V" class="avpu-opt"><span class="ab">V</span><span class="at"><b>Verbal</b> <span>ตอบสนองต่อการเรียก</span></span></button>
+        <button data-v="P" class="avpu-opt"><span class="ab">P</span><span class="at"><b>Pain</b> <span>ตอบสนองต่อการกระตุ้นเจ็บ</span></span></button>
+        <button data-v="U" class="avpu-opt"><span class="ab">U</span><span class="at"><b>Unresponsive</b> <span>ไม่ตอบสนอง</span></span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: RESULT -->
+  <section class="card">
+    <h2><span class="step">2</span> ผลคะแนนและกลุ่มเสี่ยง</h2>
+    <p class="hint">คะแนน NEWS รวมและการจำแนกกลุ่มเสี่ยง</p>
+    <div class="monitor" id="monitor">
+      <p class="mlabel">NEWS รวม</p>
+      <div class="score" id="total">0</div>
+      <div class="band" id="band">รอข้อมูล</div>
+      <div class="redflag" id="redflag" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- STEP 3: UFR -->
+  <section class="card">
+    <h2><span class="step">3</span> คำนวณอัตราการดึงน้ำ (UFR)</h2>
+    <p class="hint">คำนวณปริมาณน้ำสูงสุดที่ดึงได้ตามกลุ่มเสี่ยง</p>
+
+    <div class="grid2">
+      <div class="field">
+        <label>น้ำหนักก่อนฟอก</label>
+        <div class="row"><input type="number" id="preW" inputmode="decimal" placeholder="—"><span class="suffix">กก.</span></div>
+      </div>
+      <div class="field">
+        <label>น้ำหนักแห้ง</label>
+        <div class="row"><input type="number" id="dryW" inputmode="decimal" placeholder="—"><span class="suffix">กก.</span></div>
+      </div>
+    </div>
+
+    <div class="readonly">
+      <span class="k">น้ำหนักที่เกิน</span>
+      <span class="v" id="excess">– กก.</span>
+    </div>
+    <p class="fixednote">ระยะเวลาฟอกคิดที่ <b>4 ชั่วโมง</b> ทุกครั้ง</p>
+
+    <div class="ufresult">
+      <div class="placeholder" id="ufplaceholder">กรอกน้ำหนักก่อนฟอกและน้ำหนักแห้งเพื่อคำนวณ</div>
+      <div id="ufbody" style="display:none">
+        <div class="ufr-cap">
+          <p class="cl">ดึงน้ำได้ไม่เกิน</p>
+          <p class="num" id="maxml">–</p>
+          <p class="u">ซีซี (มิลลิลิตร)</p>
+        </div>
+        <p class="ufr-formula" id="formula">= น้ำหนักแห้ง × เกณฑ์กลุ่มเสี่ยง × 4 ชม.</p>
+        <div class="verdict" id="verdict">–</div>
+      </div>
+    </div>
+
+    <div class="ceilings" id="ceilings">
+      <div class="ceil c-low" data-grp="low"><div class="cname">เสี่ยงต่ำ</div><div class="cval" id="ceil-low">12</div></div>
+      <div class="ceil c-med" data-grp="medium"><div class="cname">เสี่ยงปานกลาง</div><div class="cval" id="ceil-med">10</div></div>
+      <div class="ceil c-high" data-grp="high"><div class="cname">เสี่ยงสูง</div><div class="cval" id="ceil-high">10</div></div>
+    </div>
+  </section>
+
+  <!-- STEP 4: CARE (LAST) -->
+  <section class="card">
+    <h2><span class="step">4</span> การเฝ้าระวังและการดูแล</h2>
+    <p class="hint">แนวทางตามกลุ่มเสี่ยง (กลุ่มที่ตรงกับผู้ป่วยจะถูกเน้น)</p>
+
+    <div class="care g-low" id="care-low">
+      <p class="ct">กลุ่มความเสี่ยงต่ำ (NEWS 0–4)<span class="badge" style="display:none">กลุ่มของผู้ป่วย</span></p>
+      <p class="cb">ดูแลตามมาตรฐานปกติ วัดสัญญาณชีพทุก 30 นาทีตลอดการฟอกเลือด ตั้งอัตราการดึงน้ำ (UFR) ให้ดึงน้ำไม่เกิน 12 ซีซี ต่อน้ำหนักตัวปกติของผู้ป่วยต่อชั่วโมง ตั้งอุณหภูมิเครื่องฟอกไตต่ำกว่าอุณหภูมิร่างกาย ประมาณ 36.0 °C</p>
+    </div>
+
+    <div class="care g-medium" id="care-medium">
+      <p class="ct">กลุ่มความเสี่ยงปานกลาง (NEWS 5–6 หรือมีพารามิเตอร์ใด = 3)<span class="badge" style="display:none">กลุ่มของผู้ป่วย</span></p>
+      <p class="cb">เพิ่มความถี่การวัดสัญญาณชีพเป็นทุก 15 นาที ในชั่วโมงแรกและชั่วโมงสุดท้าย ชั่วโมงที่ 2–3 วัดทุก 30 นาที ปรับอัตราการดึงน้ำ (UFR) ให้ดึงน้ำไม่เกิน 10 ซีซี ต่อน้ำหนักตัวปกติของผู้ป่วยต่อชั่วโมง ตั้งอุณหภูมิเครื่องฟอกไตต่ำกว่าอุณหภูมิร่างกาย ประมาณ 35.5 °C</p>
+    </div>
+
+    <div class="care g-high" id="care-high">
+      <p class="ct">กลุ่มความเสี่ยงสูง (NEWS ≥ 7)<span class="badge" style="display:none">กลุ่มของผู้ป่วย</span></p>
+      <p class="cb">เฝ้าระวังอย่างใกล้ชิด วัดสัญญาณชีพทุก 15 นาทีตลอดการฟอกเลือด ปรับอัตราการดึงน้ำให้ดึงน้ำไม่เกิน 10 ซีซี ต่อน้ำหนักตัวปกติของผู้ป่วยต่อชั่วโมง ตั้งอุณหภูมิน้ำยาฟอกเลือดที่ 35.5 °C และรายงานแพทย์เพื่อพิจารณาปรับแผนการรักษา</p>
+    </div>
+  </section>
+
+  <button class="share" id="share">📋 บันทึก / แชร์ผลเป็นข้อความ</button>
+  <button class="reset" id="reset">ล้างข้อมูลทั้งหมด</button>
+
+  <footer>
+    <p><b>การให้คะแนน:</b> อ้างอิง National Early Warning Score (NEWS), Royal College of Physicians • <b>เกณฑ์ UFR:</b> ตามรูปแบบการดูแลผู้ป่วยของหน่วยงาน</p>
+    <p>เครื่องมือสนับสนุนการตัดสินใจ ไม่ทดแทนวิจารณญาณทางคลินิกและคำสั่งแพทย์ • ปรับเกณฑ์ได้ที่ตัวแปร UFR_CEILING ในไฟล์</p>
+    <p style="margin-top:8px"><b>ติดตั้งเป็นแอปบนหน้าจอโฮม</b><br>
+    iPhone/iPad: เปิดด้วย Safari แล้วกดปุ่มแชร์ ▵ &rarr; “เพิ่มไปยังโฮมสกรีน”<br>
+    Android: เปิดด้วย Chrome แล้วกดเมนู ⋮ &rarr; “เพิ่มลงในหน้าจอหลัก”</p>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal">
+  <div class="box">
+    <h3>ผลการประเมิน</h3>
+    <p>กดค้างที่ข้อความเพื่อคัดลอก แล้วนำไปวางในแชต LINE</p>
+    <textarea id="reportText" readonly></textarea>
+    <div class="mbtns">
+      <button class="mcopy" id="mcopy">คัดลอก</button>
+      <button class="mclose" id="mclose">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== CONFIG ====== */
+const UFR_CEILING = { low:12, medium:10, high:10 };   // ซีซี/กก./ชม. ต่อกลุ่มเสี่ยง
+const DIALYSIS_HOURS = 4;                              // เวลาฟอกคงที่
+
+const num = id => { const v = parseFloat(document.getElementById(id).value); return isNaN(v)?null:v; };
+
+function scoreRR(v){ if(v===null)return null; if(v<=8)return 3; if(v<=11)return 1; if(v<=20)return 0; if(v<=24)return 2; return 3; }
+function scoreSpO2(v){ if(v===null)return null; if(v<=91)return 3; if(v<=93)return 2; if(v<=95)return 1; return 0; }
+function scoreTemp(v){ if(v===null)return null; if(v<=35.0)return 3; if(v<=36.0)return 1; if(v<=38.0)return 0; if(v<=39.0)return 1; return 2; }
+function scoreSBP(v){ if(v===null)return null; if(v<=90)return 3; if(v<=100)return 2; if(v<=110)return 1; if(v<=219)return 0; return 3; }
+function scoreHR(v){ if(v===null)return null; if(v<=40)return 3; if(v<=50)return 1; if(v<=90)return 0; if(v<=110)return 1; if(v<=130)return 2; return 3; }
+
+let o2val = 0;
+let avpuVal = 'A';
+
+function paintSub(id,s){ const el=document.getElementById(id); el.className='subscore'+(s===null?'':' s'+s); el.textContent=s===null?'–':s; }
+
+let currentGroup='pending';
+
+function compute(){
+  const sub={ rr:scoreRR(num('rr')), spo2:scoreSpO2(num('spo2')), temp:scoreTemp(num('temp')),
+              sbp:scoreSBP(num('sbp')), hr:scoreHR(num('hr')), o2:o2val?2:0, avpu:avpuVal==='A'?0:3 };
+  paintSub('s-rr',sub.rr); paintSub('s-spo2',sub.spo2); paintSub('s-temp',sub.temp); paintSub('s-sbp',sub.sbp); paintSub('s-hr',sub.hr);
+
+  let total=0, anyThree=false, filled=0;
+  ['rr','spo2','temp','sbp','hr'].forEach(k=>{ if(sub[k]!==null){ filled++; total+=sub[k]; if(sub[k]===3)anyThree=true; } });
+  total+=sub.o2; total+=sub.avpu;
+  if(sub.avpu===3)anyThree=true;
+
+  let grp,band;
+  if(filled===0){ grp='pending'; band='กรอกยังไม่ครบ'; }
+  else if(total>=7){ grp='high'; band='เสี่ยงสูง'; }
+  else if(total>=5||anyThree){ grp='medium'; band='เสี่ยงปานกลาง'; }
+  else { grp='low'; band='เสี่ยงต่ำ'; }
+
+  currentGroup=grp;
+  const complete=(filled===5);
+
+  // monitor
+  const mon=document.getElementById('monitor');
+  document.getElementById('total').textContent=total;
+  mon.className='monitor'+(grp==='pending'?'':' '+grp);
+  document.getElementById('band').textContent = (grp==='pending')?'กรอกสัญญาณชีพให้ครบ':(band+(complete?'':' (ข้อมูลยังไม่ครบ)'));
+  const rf=document.getElementById('redflag');
+  if(anyThree){ rf.style.display='inline-block'; rf.textContent='⚠ มีพารามิเตอร์เดี่ยว = 3 คะแนน'; } else { rf.style.display='none'; }
+
+  // ceilings highlight
+  document.querySelectorAll('.ceil').forEach(c=>c.classList.remove('active'));
+  if(grp!=='pending') document.querySelector('.ceil[data-grp="'+grp+'"]').classList.add('active');
+
+  // care highlight (last section)
+  ['low','medium','high'].forEach(g=>{
+    const el=document.getElementById('care-'+g);
+    const badge=el.querySelector('.badge');
+    const on=(g===grp);
+    el.classList.toggle('on',on);
+    badge.style.display=on?'inline-block':'none';
+  });
+
+  calcUFR();
+}
+
+function calcUFR(){
+  const pre=num('preW'), dry=num('dryW');
+  const ex=document.getElementById('excess');
+  const body=document.getElementById('ufbody');
+  const ph=document.getElementById('ufplaceholder');
+
+  if(pre!==null && dry!==null){ ex.textContent=(pre-dry).toFixed(2)+' กก.'; }
+  else { ex.textContent='– กก.'; }
+
+  if(pre===null || dry===null || dry<=0){ body.style.display='none'; ph.style.display='block'; return; }
+  ph.style.display='none'; body.style.display='block';
+
+  const excessMl=(pre-dry)*1000;
+  const ceiling=(currentGroup==='pending')?UFR_CEILING.low:UFR_CEILING[currentGroup];
+  const maxMl=dry*ceiling*DIALYSIS_HOURS;
+
+  document.getElementById('maxml').textContent=Math.round(maxMl).toLocaleString();
+  const grpTH={low:'เสี่ยงต่ำ',medium:'เสี่ยงปานกลาง',high:'เสี่ยงสูง',pending:'(ยังไม่จัดกลุ่ม)'}[currentGroup];
+  document.getElementById('formula').textContent='= '+dry+' กก. × '+ceiling+' × '+DIALYSIS_HOURS+' ชม.  ('+grpTH+')';
+
+  const verdict=document.getElementById('verdict');
+  if(currentGroup==='pending'){
+    verdict.className='verdict warn';
+    verdict.textContent='ยังไม่ได้จัดกลุ่มเสี่ยง — ใช้เกณฑ์เสี่ยงต่ำ (12) ชั่วคราว';
+  } else if(excessMl<=0){
+    verdict.className='verdict safe';
+    verdict.textContent='ไม่มีน้ำส่วนเกินที่ต้องดึง';
+  } else if(excessMl<=maxMl){
+    verdict.className='verdict safe';
+    verdict.textContent='น้ำเกิน '+Math.round(excessMl).toLocaleString()+' ซีซี — ดึงได้ครบภายในเกณฑ์ ('+grpTH+')';
+  } else {
+    verdict.className='verdict danger';
+    verdict.textContent='น้ำเกิน '+Math.round(excessMl).toLocaleString()+' ซีซี — เกินเพดาน ควรปรึกษาแพทย์/ขยายเวลาฟอก';
+  }
+}
+
+document.querySelectorAll('#o2 button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#o2 button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); o2val=parseInt(b.dataset.v); compute();
+}));
+document.querySelectorAll('#avpu .avpu-opt').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#avpu .avpu-opt').forEach(x=>{x.classList.remove('on');x.classList.remove('abn');});
+  b.classList.add('on'); avpuVal=b.dataset.v;
+  if(avpuVal!=='A') b.classList.add('abn');
+  compute();
+}));
+['rr','spo2','temp','sbp','hr'].forEach(id=>document.getElementById(id).addEventListener('input',compute));
+['preW','dryW'].forEach(id=>document.getElementById(id).addEventListener('input',calcUFR));
+
+document.getElementById('ceil-low').textContent=UFR_CEILING.low;
+document.getElementById('ceil-med').textContent=UFR_CEILING.medium;
+document.getElementById('ceil-high').textContent=UFR_CEILING.high;
+
+document.getElementById('reset').addEventListener('click',()=>{
+  document.querySelectorAll('input[type=number]').forEach(i=>i.value='');
+  o2val=0; avpuVal='A';
+  document.querySelectorAll('#o2 button').forEach((x,i)=>x.classList.toggle('on',i===0));
+  document.querySelectorAll('#avpu .avpu-opt').forEach((x,i)=>{x.classList.toggle('on',i===0);x.classList.remove('abn');});
+  compute();
+});
+
+/* ===== บันทึก / แชร์ผลเป็นข้อความ ===== */
+function buildReport(){
+  const dt=new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
+  const sRR=scoreRR(num('rr')), sSpO2=scoreSpO2(num('spo2')), sTemp=scoreTemp(num('temp')),
+        sSBP=scoreSBP(num('sbp')), sHR=scoreHR(num('hr')), sO2=o2val?2:0, sAV=avpuVal==='A'?0:3;
+  let total=0,filled=0,anyThree=false;
+  [sRR,sSpO2,sTemp,sSBP,sHR].forEach(s=>{ if(s!==null){filled++;total+=s;if(s===3)anyThree=true;} });
+  total+=sO2; total+=sAV; if(sAV===3)anyThree=true;
+  let grp,band;
+  if(filled===0){grp='pending';band='ยังไม่ได้ประเมิน';}
+  else if(total>=7){grp='high';band='เสี่ยงสูง';}
+  else if(total>=5||anyThree){grp='medium';band='เสี่ยงปานกลาง';}
+  else {grp='low';band='เสี่ยงต่ำ';}
+
+  const avLabel={A:'A (Alert) รู้สึกตัวดี',V:'V (Verbal) ตอบสนองต่อการเรียก',P:'P (Pain) ตอบสนองต่อการกระตุ้นเจ็บ',U:'U (Unresponsive) ไม่ตอบสนอง'}[avpuVal];
+  const vr=(lbl,v,s,u)=> (v===null?('• '+lbl+': —'):('• '+lbl+': '+v+' '+u+'  ('+s+')'));
+
+  const L=[];
+  L.push('แบบบันทึกการประเมิน NEWS & UFR');
+  L.push('โรงพยาบาลสุโขทัย — หน่วยไตเทียม');
+  L.push('วันที่ '+dt);
+  L.push('────────────────');
+  L.push('[ สัญญาณชีพ ]');
+  L.push(vr('อัตราการหายใจ',num('rr'),sRR,'ครั้ง/นาที'));
+  L.push(vr('SpO2',num('spo2'),sSpO2,'%'));
+  L.push('• การได้รับออกซิเจน: '+(o2val?'ได้รับ':'ไม่ได้รับ')+'  ('+sO2+')');
+  L.push(vr('อุณหภูมิ',num('temp'),sTemp,'°C'));
+  L.push(vr('ความดันซิสโตลิก',num('sbp'),sSBP,'มม.ปรอท'));
+  L.push(vr('อัตราการเต้นหัวใจ',num('hr'),sHR,'ครั้ง/นาที'));
+  L.push('• ระดับความรู้สึกตัว: '+avLabel+'  ('+sAV+')');
+  L.push('────────────────');
+  L.push('NEWS รวม: '+total+' คะแนน');
+  L.push('กลุ่มเสี่ยง: '+band);
+  if(anyThree) L.push('* มีพารามิเตอร์เดี่ยว = 3 คะแนน');
+
+  const pre=num('preW'), dry=num('dryW');
+  L.push('────────────────');
+  L.push('[ การดึงน้ำ (UFR) — เวลา '+DIALYSIS_HOURS+' ชม. ]');
+  if(pre!==null && dry!==null && dry>0){
+    const excessMl=(pre-dry)*1000;
+    const ceiling=(grp==='pending')?UFR_CEILING.low:UFR_CEILING[grp];
+    const maxMl=dry*ceiling*DIALYSIS_HOURS;
+    L.push('• น้ำหนักก่อนฟอก: '+pre+' กก.');
+    L.push('• น้ำหนักแห้ง: '+dry+' กก.');
+    L.push('• น้ำหนักที่เกิน: '+(pre-dry).toFixed(2)+' กก. ('+Math.round(excessMl).toLocaleString()+' ซีซี)');
+    L.push('• ดึงน้ำได้ไม่เกิน: '+Math.round(maxMl).toLocaleString()+' ซีซี  (= '+dry+'x'+ceiling+'x'+DIALYSIS_HOURS+')');
+    if(excessMl>maxMl) L.push('• สถานะ: * น้ำเกินมากกว่าที่ดึงได้ — พิจารณาปรึกษาแพทย์/ขยายเวลา');
+    else if(excessMl>0) L.push('• สถานะ: ดึงได้ครบภายในเกณฑ์');
+    else L.push('• สถานะ: ไม่มีน้ำส่วนเกิน');
+  } else {
+    L.push('(ยังไม่ได้กรอกน้ำหนัก)');
+  }
+
+  const careTxt={
+    low:'ดูแลตามมาตรฐานปกติ วัดสัญญาณชีพทุก 30 นาที UFR ไม่เกิน 12 ซีซี/กก./ชม. อุณหภูมิน้ำยา ~36.0 องศา',
+    medium:'วัดสัญญาณชีพทุก 15 นาที (ชม.แรกและสุดท้าย) ชม.2-3 ทุก 30 นาที UFR ไม่เกิน 10 ซีซี/กก./ชม. อุณหภูมิน้ำยา ~35.5 องศา',
+    high:'เฝ้าระวังใกล้ชิด วัดสัญญาณชีพทุก 15 นาทีตลอด UFR ไม่เกิน 10 ซีซี/กก./ชม. อุณหภูมิน้ำยา 35.5 องศา และรายงานแพทย์'
+  };
+  if(grp!=='pending'){ L.push('────────────────'); L.push('[ การเฝ้าระวัง ]'); L.push(careTxt[grp]); }
+  return L.join('\n');
+}
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
+
+async function saveReport(){
+  const txt=buildReport();
+  if(navigator.share){ try{ await navigator.share({text:txt}); return; }catch(e){ if(e&&e.name==='AbortError')return; } }
+  if(navigator.clipboard && window.isSecureContext){
+    try{ await navigator.clipboard.writeText(txt); toast('คัดลอกผลแล้ว นำไปวางในแชต LINE ได้เลย'); return; }catch(e){}
+  }
+  document.getElementById('reportText').value=txt;
+  document.getElementById('modal').classList.add('show');
+}
+document.getElementById('share').addEventListener('click',saveReport);
+document.getElementById('mclose').addEventListener('click',()=>document.getElementById('modal').classList.remove('show'));
+document.getElementById('mcopy').addEventListener('click',()=>{
+  const ta=document.getElementById('reportText');
+  ta.removeAttribute('readonly');           // iOS ต้องไม่ readonly จึงจะเลือกได้
+  ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+  let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+  ta.setAttribute('readonly','');
+  toast(ok?'คัดลอกแล้ว':'กดค้างที่ข้อความเพื่อคัดลอกเอง');
+});
+
+/* ===== ตั้งค่าไอคอนแอป + manifest จากโลโก้ (รองรับเพิ่มลงหน้าจอโฮม iOS/Android) ===== */
+(function(){
+  try{
+    const logoSrc=document.querySelector('header .logo').src;
+    document.getElementById('ati').href=logoSrc;
+    document.getElementById('favi').href=logoSrc;
+    const manifest={
+      name:'NEWS & UFR ไตเทียม', short_name:'NEWS-UFR',
+      start_url:'.', scope:'.', display:'standalone',
+      background_color:'#F2F7FB', theme_color:'#0B3D6B', lang:'th',
+      icons:[
+        {src:logoSrc,sizes:'192x192',type:'image/png',purpose:'any'},
+        {src:logoSrc,sizes:'512x512',type:'image/png',purpose:'any'}
+      ]
+    };
+    document.getElementById('manifest').href=
+      'data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(manifest));
+  }catch(e){}
+})();
+
+compute();
+</script>
+</body>
+</html>
